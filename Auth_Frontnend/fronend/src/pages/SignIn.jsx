@@ -1,30 +1,33 @@
 import React, { useState } from "react";
 
-const Signup = () => {
+const SignIn = () => {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8081/api/auth/signup", {
+      const response = await fetch("http://localhost:8081/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify({ username, password })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        setMessage(`❌ Signup failed: ${errorText}`);
-        return;
+        throw new Error("Signin failed");
       }
 
-      const data = await response.text(); // backend returns a string message
-      setMessage(`✅ ${data}`);
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
+
+      if (data.role === "ROLE_ADMIN") {
+        setMessage("✅ Welcome Admin! You have full access.");
+      } else {
+        setMessage("✅ Welcome User! Limited access granted.");
+      }
     } catch (err) {
-      setMessage("❌ Signup request failed. Please try again.");
+      setMessage("❌ Signin failed. Please check your credentials.");
     }
   };
 
@@ -45,22 +48,13 @@ const Signup = () => {
         width: "300px",
         color: "#333"
       }}>
-        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Sign Up</h2>
+        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Sign In</h2>
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
-          required
         />
         <input
           type="password"
@@ -68,13 +62,12 @@ const Signup = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
-          required
         />
-        <button type="submit">Sign Up</button>
+        <button type="submit">Sign In</button>
         {message && <p style={{ marginTop: "15px", textAlign: "center" }}>{message}</p>}
       </form>
     </div>
   );
 };
 
-export default Signup;
+export default SignIn;
